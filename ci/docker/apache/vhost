@@ -1,0 +1,48 @@
+<VirtualHost *:80>
+
+    ServerAdmin webmaster@localhost
+
+    DocumentRoot /var/www/html/public
+
+    SetEnv DD_APM_ENABLED ${DD_APM_ENABLED}
+    SetEnv DD_AGENT_HOST ${DD_AGENT_HOST}
+    SetEnv DD_TRACE_AGENT_PORT ${DD_TRACE_AGENT_PORT}
+
+    <Directory "/var/www/html/public">
+        Options -Indexes -MultiViews
+        AllowOverride All
+        Require all granted
+
+
+        RewriteEngine On
+
+        # Handle server status access
+        RewriteRule ^(server-status) - [L]
+
+        # Handle Authorization Header
+        RewriteCond %{HTTP:Authorization} .
+        RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+        # Redirect Trailing Slashes If Not A Folder...
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_URI} (.+)/$
+        RewriteRule ^ %1 [L,R=301]
+
+        # Handle Front Controller...
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteRule ^ index.php [L]
+
+    </Directory>
+
+    ErrorDocument 403 /
+    ErrorDocument 404 /
+
+</VirtualHost>
+
+# Security Headers
+Header set X-Frame-Options sameorigin
+Header set X-XSS-Protection "1; mode=block"
+Header set X-Content-Type-Options nosniff
+Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+Header set Referrer-Policy "no-referrer-when-downgrade"

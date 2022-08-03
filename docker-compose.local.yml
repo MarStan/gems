@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 63799:6379
+    networks:
+      - proxy_proxy
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      TZ: +00:00
+    networks:
+      - proxy_proxy
+    volumes:
+      - ${DATA_DIR}:/var/lib/mysql
+    ports:
+      - ${DOCKER_EXPOSED_DB_PORT}:3306
+
+  usergems:
+    environment:
+      - VIRTUAL_HOST=usergems.local
+    build:
+      context: .
+      dockerfile: ci/docker/Dockerfile
+      args:
+        - APP_ENV=dev
+    networks:
+      - proxy_proxy
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ${PWD}:/var/www/html
+    expose:
+      - 80
+
+networks:
+  proxy_proxy:
+    external: true
