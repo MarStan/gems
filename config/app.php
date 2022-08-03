@@ -173,6 +173,9 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\TestsServiceProvider::class,
 
+        \App\Providers\CalendarApiServiceProvider::class,
+        \App\Providers\PersonDataApiServiceProvider::class,
+
     ],
 
     /*
