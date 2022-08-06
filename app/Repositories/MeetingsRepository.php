@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Meeting;
-use App\Models\Person;
 use Illuminate\Support\Facades\DB;
+use App\Services\DTO\Meeting as MeetingDTO;
 
 class MeetingsRepository
 {
@@ -42,19 +42,32 @@ class MeetingsRepository
             ->all();
     }
 
-    public function createOrUpdate(array $meeting)
+    public function createOrUpdateFromDTO(MeetingDTO $meeting): void
     {
-        //TODO: check if user is from usergems
-        //TODO: update by chunk
-        //TODO: add transaction
-        $meetingModel = Meeting::create($meeting['meeting']);
-        foreach ($meeting['users']['accepted'] ?? [] as $email) {
-            $person = Person::updateOrCreate(['email' => $email]);
-            $meetingModel->persons()->attach($person);
-        }
-        foreach ($meeting['users']['rejected'] ?? [] as $email) {
-            $person = Person::updateOrCreate(['email' => $email]);
-            $meetingModel->persons()->attach($person);
-        }
+        DB::transaction(function () use ($meeting) {
+            $meetingModel = Meeting::updateOrCreate([
+                'id' => $meeting->id,
+                'start' => $meeting->start->format('Y-m-d H:i:s'),
+                'end' => $meeting->start->format('Y-m-d H:i:s'),
+                'changed' => $meeting->changed->format('Y-m-d H:i:s'),
+                'title' => $meeting->title,
+            ]);
+
+            foreach ($meeting->accepted as $email) {
+                PersonRepository::createAndAttachToMeeting($email, $meetingModel);
+            }
+            foreach ($meeting->accepted as $email) {
+                PersonRepository::createAndAttachToMeeting($email, $meetingModel);
+            }
+        });
+    }
+
+    public function getLastMeetingByEmployeeToken(string $token): \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Query\Builder|\stdClass|null
+    {
+        return DB::table('meetings', 'M')
+            ->join('employee_meeting', 'employee_meeting.meeting_id', 'M.id')
+            ->join('employees', 'employee_meeting.employee_id', 'employees.id')
+            ->where('employees.token', $token)
+            ->first();
     }
 }

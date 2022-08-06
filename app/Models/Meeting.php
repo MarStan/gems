@@ -10,15 +10,15 @@ class Meeting extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['start', 'end', 'title'];
+    protected $fillable = ['id', 'start', 'end', 'changed', 'title'];
 
-    public function persons(): BelongsToMany
+    public function people(): BelongsToMany
     {
         return $this->belongsToMany(Person::class, 'person_meeting');
     }
 
     public function employees(): BelongsToMany
     {
-        return $this->belongsToMany(Person::class, 'employee_meeting');
+        return $this->belongsToMany(Employee::class, 'employee_meeting');
     }
 }

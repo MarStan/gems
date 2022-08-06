@@ -19,8 +19,7 @@ class SendEmails extends Command
 
     public function handle(): void
     {
-        Employee::latest('id')
-            ->chunk(100, function ($users) {
+        Employee::chunk(100, function ($users) {
                 foreach ($users as $user) {
                     $this->emailService->sendEmails($user);
                 }

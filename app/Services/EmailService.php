@@ -25,12 +25,12 @@ class EmailService
     public function sendEmails(CalendarUser $user): void
     {
         //TODO: where start is today
-        foreach ($this->calendarService->getCalendarData($user->token) as $page) {
-            foreach ($page['data'] as $meeting) {
-                $meetingData = $this->getMeetingData($meeting);
-                Mail::to($user->email)->send(new MorningSaleUpdate($meetingData));
-            }
-        }
+//        foreach ($this->calendarService->getMeetings($user->token) as $meeting) {
+//            foreach ($page['data'] as $meeting) {
+//                $meetingData = $this->getMeetingData($meeting);
+//                Mail::to($user->email)->send(new MorningSaleUpdate($meetingData));
+//            }
+//        }
     }
 
     public function getMeetingData(array $meeting): array
