@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\CalendarUser;
 use App\Repositories\MeetingsRepository;
+use App\Services\Api\CalendarApiClient;
 
 class SyncService
 {
@@ -22,7 +23,6 @@ class SyncService
             foreach ($page['data'] as $meeting) {
                 $meeting = $this->prepareMeetingData($meeting);
                 $this->saveMeeting($meeting);
-
             }
         }
     }
@@ -38,7 +38,7 @@ class SyncService
             'users' => [
                 'accepted' => $meeting['accepted'],
                 'rejected' => $meeting['rejected'],
-            ]
+            ],
         ];
     }
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Services\Api;
 
 use Illuminate\Http\Client\Factory;
 
@@ -19,6 +19,7 @@ class CalendarApiClient
         $headers = [
             'Authorization' => 'Bearer ' . $token,
         ];
+
         return $this->factory
             ->baseUrl($this->config['base_url'])
             ->timeout($this->config['timeout'] ?? 20)

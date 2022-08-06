@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Services\Api\CalendarApiClient;
+
 class CalendarService
 {
     public function __construct(private CalendarApiClient $calendarClient)
@@ -17,5 +19,4 @@ class CalendarService
             yield $response;
         } while ($response['total'] > $response['per_page'] * $response['current_page']);
     }
-
 }

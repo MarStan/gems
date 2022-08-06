@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Mail\MorningSaleUpdate;
 use App\Models\CalendarUser;
 use App\Repositories\MeetingsRepository;
+use App\Services\Api\PersonDataApiClient;
 use DateTime;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
@@ -18,8 +19,7 @@ class EmailService
         private PersonDataApiClient $personClient,
         private CalendarService $calendarService,
         private MeetingsRepository $meetings,
-    )
-    {
+    ) {
     }
 
     public function sendEmails(CalendarUser $user): void
@@ -29,7 +29,6 @@ class EmailService
             foreach ($page['data'] as $meeting) {
                 $meetingData = $this->getMeetingData($meeting);
                 Mail::to($user->email)->send(new MorningSaleUpdate($meetingData));
-                die;
             }
         }
     }
@@ -52,25 +51,27 @@ class EmailService
         $data['metadata'] = $this->getEmailMetadata($meeting);
         $data['metadata']['company'] = reset($data['accepted'])['company']['name'] ?? null;
         $data['metadata']['employees'] = reset($data['accepted'])['company']['employees'] ?? null;
+
         return $data;
     }
 
     private function getPersonData(string $email): ?array
     {
         $meetingsAmount = $this->meetings->countMeetingsWithUsergems($email);
-        dd($meetingsAmount);
 
         try {
             $data = $this->personClient->request($email);
             //TODO: finish that
             $data['met_with'] = 'Christian (1x) & Blaise (4x)';
             $data['meeting_number'] = '12th';
+
             return $data;
         } catch (RequestException $exception) {
             Log::error('Something went wrong. ' . $exception->getMessage(), [
                 'code' => $exception->getCode(),
                 'trace' => $exception->getTraceAsString(),
             ]);
+
             return null;
         }
     }
@@ -91,7 +92,7 @@ class EmailService
                 [
                     'first_name' => 'Joss',
                     'accepted' => true,
-                ]
+                ],
             ],
         ];
     }

@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Services\CalendarApiClient;
+use App\Services\Api\CalendarApiClient;
 use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Support\ServiceProvider;

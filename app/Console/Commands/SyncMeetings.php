@@ -2,28 +2,26 @@
 
 namespace App\Console\Commands;
 
-use App\Models\CalendarUser;
+use App\Models\Employee;
 use App\Services\SyncService;
 use Illuminate\Console\Command;
 
-class Sync extends Command
+class SyncMeetings extends Command
 {
-    protected $signature = 'sync';
+    protected $signature = 'meetings:sync';
 
-    protected $description = 'Sync database';
+    protected $description = 'Sync meetings';
 
     public function __construct(
         private SyncService $syncService,
-    )
-    {
+    ) {
         parent::__construct();
     }
 
     public function handle(): int
     {
-        CalendarUser::latest('id')
-            ->where('is_usergems_employee', true)
-            ->chunk(100, function($users) {
+        Employee::latest('id')
+            ->chunk(100, function ($users) {
                 foreach ($users as $user) {
                     $this->syncService->sync($user);
                 }

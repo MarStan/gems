@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('calendar_user_meeting', function (Blueprint $table) {
+        Schema::create('employee_meeting', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->unsignedBigInteger('calendar_user_id')->unsigned();
+            $table->unsignedBigInteger('employee_id')->unsigned();
             $table->unsignedBigInteger('meeting_id')->unsigned();
-            $table->foreign('calendar_user_id')->references('id')->on('calendar_users')
+            $table->foreign('employee_id')->references('id')->on('employees')
                 ->onDelete('cascade');
             $table->foreign('meeting_id')->references('id')->on('meetings')
                 ->onDelete('cascade');
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('calendar_user_meeting');
+        Schema::dropIfExists('employee_meeting');
     }
 };

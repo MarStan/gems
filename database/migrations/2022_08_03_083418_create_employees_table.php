@@ -12,12 +12,11 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('meetings', function (Blueprint $table) {
+        Schema::create('employees', function (Blueprint $table) {
             $table->id();
+            $table->string('token')->nullable();
+            $table->string('email')->unique();
             $table->timestamps();
-            $table->string('title');
-            $table->dateTime('start');
-            $table->dateTime('end');
         });
     }
 
@@ -28,6 +27,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('meetings');
+        Schema::dropIfExists('employees');
     }
 };

@@ -13,12 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('calendar_users', function (Blueprint $table) {
+        Schema::create('persons', function (Blueprint $table) {
             $table->id();
-            $table->string('token')->nullable();
-            $table->string('email')->unique();
-            $table->boolean('is_usergems_employee')->default(false);
             $table->timestamps();
+            $table->string('email')->unique();
         });
     }
 
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('calendar_users');
+        Schema::dropIfExists('persons');
     }
 };

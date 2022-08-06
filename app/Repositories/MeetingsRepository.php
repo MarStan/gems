@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Models\CalendarUser;
 use App\Models\Meeting;
+use App\Models\Person;
 use Illuminate\Support\Facades\DB;
 
 class MeetingsRepository
@@ -49,14 +49,12 @@ class MeetingsRepository
         //TODO: add transaction
         $meetingModel = Meeting::create($meeting['meeting']);
         foreach ($meeting['users']['accepted'] ?? [] as $email) {
-            $user = CalendarUser::updateOrCreate(['email' => $email]);
-            $meetingModel->calendarUsers()->attach($user);
+            $person = Person::updateOrCreate(['email' => $email]);
+            $meetingModel->persons()->attach($person);
         }
         foreach ($meeting['users']['rejected'] ?? [] as $email) {
-            $user = CalendarUser::updateOrCreate(['email' => $email]);
-            $meetingModel->calendarUsers()->attach($user);
+            $person = Person::updateOrCreate(['email' => $email]);
+            $meetingModel->persons()->attach($person);
         }
-
-
     }
 }

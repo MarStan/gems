@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Services\PersonDataApiClient;
+use App\Services\Api\PersonDataApiClient;
 use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Support\ServiceProvider;

@@ -4,10 +4,6 @@
 
     DocumentRoot /var/www/html/public
 
-    SetEnv DD_APM_ENABLED ${DD_APM_ENABLED}
-    SetEnv DD_AGENT_HOST ${DD_AGENT_HOST}
-    SetEnv DD_TRACE_AGENT_PORT ${DD_TRACE_AGENT_PORT}
-
     <Directory "/var/www/html/public">
         Options -Indexes -MultiViews
         AllowOverride All

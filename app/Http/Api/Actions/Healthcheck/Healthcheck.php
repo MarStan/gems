@@ -2,7 +2,6 @@
 
 namespace App\Http\Api\Actions\Healthcheck;
 
-
 use App\Http\Api\Actions\Action;
 use App\Http\Requests\HealthcheckRequest;
 use App\Http\Responses\ApiResponse;
