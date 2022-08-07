@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Repositories\MeetingsRepository;
 use App\Services\Api\CalendarApiClient;
 use App\Services\DTO\Meeting;
-use Illuminate\Support\Facades\Log;
 
 class CalendarService
 {
-    public function __construct(private CalendarApiClient $calendarClient)
+    public function __construct(private CalendarApiClient $apiClient)
     {
     }
 
@@ -29,7 +27,7 @@ class CalendarService
     {
         $page = 0;
         do {
-            $response = $this->calendarClient->request($employeeToken, ++$page);
+            $response = $this->apiClient->request($employeeToken, ++$page);
             yield $response;
         } while ($response['total'] > $response['per_page'] * $response['current_page']);
     }

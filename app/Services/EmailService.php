@@ -5,108 +5,102 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Mail\MorningSaleUpdate;
-use App\Models\CalendarUser;
+use App\Models\Employee;
 use App\Repositories\MeetingsRepository;
-use App\Services\Api\PersonDataApiClient;
-use DateTime;
-use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Log;
+use App\Services\DTO\Meeting as MeetingDTO;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use NumberFormatter;
 
 class EmailService
 {
     public function __construct(
-        private PersonDataApiClient $personClient,
+        private PersonService $personService,
         private CalendarService $calendarService,
         private MeetingsRepository $meetings,
+        private EmployeeService $employeeService,
     ) {
     }
 
-    public function sendEmails(CalendarUser $user): void
+    public function sendEmails(Employee $employee): void
     {
-        //TODO: where start is today
-//        foreach ($this->calendarService->getMeetings($user->token) as $meeting) {
-//            foreach ($page['data'] as $meeting) {
-//                $meetingData = $this->getMeetingData($meeting);
-//                Mail::to($user->email)->send(new MorningSaleUpdate($meetingData));
-//            }
-//        }
+        $today = Carbon::now()->setTime(0, 0);
+        //###################################################################################
+        // FOR testing purposes, because there is no emails for today
+        $today = Carbon::createFromFormat('Y-m-d H:i:s', '2022-07-01 00:00:00');
+        //###################################################################################
+        foreach ($this->calendarService->getMeetings($employee->token) as $meeting) {
+            $start = clone $meeting->start;
+            if ($start->setTime(0, 0) > $today) {
+                continue;
+            }
+
+            if ($start < $today) {
+                break;
+            }
+            $meetingData = $this->getMeetingDataForEmail($meeting);
+            Mail::to($employee->email)->send(new MorningSaleUpdate($meetingData));
+        }
     }
 
-    public function getMeetingData(array $meeting): array
+    public function getMeetingDataForEmail(MeetingDTO $meeting): array
     {
-        $data = [];
+        $response = $this->getEmailGeneralData($meeting);
+        $response['participants'] = $this->getParticipantsData($meeting);
+        $response['company_name'] = reset($response['participants'])['company']['name'] ?? null;
+        $response['company_employees'] = reset($response['participants'])['company']['employees'] ?? null;
 
-        foreach ($this->filterUsergemsEmails($meeting['accepted']) as $email) {
+        return $response;
+    }
+
+    private function getParticipantsData(MeetingDTO $meeting): array
+    {
+        $participants = [];
+
+        foreach ($meeting->accepted as $email) {
             if ($personData = $this->getPersonData($email)) {
-                $data['accepted'][$email] = $personData;
+                $participants[$email] = $personData;
+                $participants[$email]['accepted'] = true;
             }
         }
-        foreach ($this->filterUsergemsEmails($meeting['rejected']) as $email) {
+        foreach ($meeting->rejected as $email) {
             if ($personData = $this->getPersonData($email)) {
-                $data['rejected'][$email] = $personData;
+                $participants[$email] = $personData;
+                $participants[$email]['accepted'] = false;
             }
         }
 
-        $data['metadata'] = $this->getEmailMetadata($meeting);
-        $data['metadata']['company'] = reset($data['accepted'])['company']['name'] ?? null;
-        $data['metadata']['employees'] = reset($data['accepted'])['company']['employees'] ?? null;
-
-        return $data;
+        return $participants;
     }
 
     private function getPersonData(string $email): ?array
     {
-        $meetingsAmount = $this->meetings->countMeetingsWithUsergems($email);
-
-        try {
-            $data = $this->personClient->request($email);
-            //TODO: finish that
-            $data['met_with'] = 'Christian (1x) & Blaise (4x)';
-            $data['meeting_number'] = '12th';
-
-            return $data;
-        } catch (RequestException $exception) {
-            Log::error('Something went wrong. ' . $exception->getMessage(), [
-                'code' => $exception->getCode(),
-                'trace' => $exception->getTraceAsString(),
-            ]);
-
-            return null;
-        }
-    }
-
-    private function getEmailMetadata(array $meeting): array
-    {
-        $start = new DateTime($meeting['start']);
-        $end = new DateTime($meeting['end']);
-
-        return [
-            'changed' => $meeting['changed'],
-            'start' => $start->format('h:i A'),
-            'end' => $end->format('h:i A'),
-            'duration' => ($end->getTimestamp() - $start->getTimestamp()) / 60,
-            'title' => $meeting['title'],
-            //TODO: missing info
-            'joining_from_usergems' => [
-                [
-                    'first_name' => 'Joss',
-                    'accepted' => true,
-                ],
-            ],
-        ];
-    }
-
-    private function filterUsergemsEmails(array $emails): array
-    {
-        $return = [];
-
-        foreach ($emails as $email) {
-            if (!str_ends_with($email, '@usergems.com')) {
-                $return[] = $email;
+        if (!$this->employeeService->isEmployeeEmail($email)) {
+            if ($personData = $this->personService->getPerson($email)) {
+                $meetingsAmount = $this->meetings->countMeetingsGroupByEmployees($email);
+                $metWith = [];
+                foreach ($meetingsAmount as $meeting) {
+                    $name = $this->employeeService->getNameFromEmail($meeting->with);
+                    $metWith[] = "{$name} ({$meeting->amount}x)";
+                }
+                $personData['met_with'] = implode(' & ', $metWith);
+                $amount = $this->meetings->countMeetings($email);
+                $personData['meeting_number'] = (new NumberFormatter('en_US', NumberFormatter::ORDINAL))->format($amount);
+                return $personData;
             }
         }
 
-        return $return;
+        return null;
+    }
+
+    private function getEmailGeneralData(MeetingDTO $meeting): array
+    {
+        return [
+            'start' => $meeting->start->format('h:i A'),
+            'end' => $meeting->end->format('h:i A'),
+            'duration' => ($meeting->end->getTimestamp() - $meeting->start->getTimestamp()) / 60,
+            'title' => $meeting->title,
+            'joining_from_usergems' => $this->employeeService->getMeetingsEmployeesNamesAndMeetingAccept($meeting),
+        ];
     }
 }

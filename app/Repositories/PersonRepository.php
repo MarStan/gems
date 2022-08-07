@@ -11,10 +11,14 @@ use App\Services\EmployeeService;
 
 class PersonRepository
 {
-    //TODO: move employee part to own repo
-    public static function createAndAttachToMeeting(string $email, Meeting $meeting): void
+    public function __construct(private EmployeeService $employeeService)
     {
-        if (!EmployeeService::isEmployeeEmail($email)) {
+    }
+
+    //TODO: move employee part to own repo
+    public function createAndAttachToMeeting(string $email, Meeting $meeting): void
+    {
+        if (!$this->employeeService->isEmployeeEmail($email)) {
             $person = Person::updateOrCreate(['email' => $email]);
             $meeting->people()->syncWithoutDetaching($person);
         } else {
